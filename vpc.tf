@@ -86,7 +86,7 @@ resource "aws_nat_gateway" "nat" {
 
   allocation_id = element(aws_eip.nat_gw_eip.*.id, count.index)
   subnet_id     = element(aws_subnet.public.*.id, count.index)
-  private_ip    = lookup(var.nat_gateway_ips, count.index)
+//  private_ip    = lookup(var.nat_gateway_ips, count.index)
 
   depends_on    = [aws_internet_gateway.igw]
 
