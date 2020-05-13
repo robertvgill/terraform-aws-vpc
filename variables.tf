@@ -14,9 +14,30 @@ variable "region" {
   default = "ap-southeast-1"
 }
 
+variable "env_name" {
+  type        = string
+  default     = "stg"
+}
+
 //AWS VPC Configuration
 variable "vpc_name" {
-  default = "vpc-stage"
+  type        = string
+  default     = "vpc"
+}
+
+variable "enable_dns_hostnames" {
+  type        = bool
+  default     = false
+}
+
+variable "enable_dns_support" {
+  type        = bool
+  default     = true
+}
+
+variable "enable_ipv6" {
+  type        = bool
+  default     = false
 }
 
 variable "vpc_cidr" {
@@ -28,17 +49,7 @@ variable "vpc_cidr" {
     netnum     = "1"
   }
 }
-/**
-variable "availability_zones" {
-  type = list
 
-  default = [
-    "ap-southeast-1a",
-    "ap-southeast-1b",
-    "ap-southeast-1c"
-  ]
-}
-**/
 variable "subnet_cidrs_public" {
   type = list
 
@@ -56,9 +67,12 @@ variable "subnet_cidrs_private" {
     "10.111.20.0/24"]
 }
 
-variable "use_ipv6" {
-  default     = false
-  description = "If true, the specified subnet will have assigned IPv6 address block."
+variable "subnet_cidrs_database" {
+  type = list
+  default = [
+    "10.111.24.0/24",
+    "10.111.28.0/24",
+    "10.111.32.0/24"]
 }
 
 variable "tenancy" {
@@ -66,10 +80,30 @@ variable "tenancy" {
   description = "Available values: default | dedicated | host"
 }
 
-variable nat_gateway_ips {
+variable "nat_gateway_ips" {
   default = {
   "0" = "10.111.0.1"
   "1" = "10.111.4.1"
   "2" = "10.111.8.1"
   }
+}
+
+variable "default_tags" {
+  description = "A map of tags to add to all resources"
+  type        = map(string)
+  default     = {
+    env       : "Stage",
+    department: "DSS",
+    team      : "Digital Engagement"
+  }
+}
+
+variable "vpc_tags" {
+  type        = map(string)
+  default     = {}
+}
+
+variable "igw_tag" {
+  type        = string
+  default     = "igw-stage"
 }

@@ -9,29 +9,43 @@ terraform {
   }
 }
 
-# AWS Availability Zones
+## AWS Availability Zones
 data "aws_availability_zones" "all" {
   state = "available"
 }
 
-# VPC and Subnets
+## VPC
 resource "aws_vpc" "vpc" {
-  cidr_block       = var.vpc_cidr["cidr_block"]
-  instance_tenancy = var.tenancy
-
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  assign_generated_ipv6_cidr_block = var.use_ipv6
+  cidr_block                       = var.vpc_cidr["cidr_block"]
+  instance_tenancy                 = var.tenancy
+  enable_dns_support               = var.enable_dns_support
+  enable_dns_hostnames             = var.enable_dns_hostnames
+  assign_generated_ipv6_cidr_block = var.enable_ipv6
 
   lifecycle {
     create_before_destroy = true
   }
 
-  tags = {
-    Name = var.vpc_name
-  }
+  tags = merge(
+    {
+      "name" = format("%s", var.vpc_name)
+    },
+    var.default_tags
+  )
 }
+
+## Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = merge(
+    {
+      "Name" = format("%s", var.igw_tag)
+    },
+    var.default_tags
+  )
+}
+
 
 resource "aws_subnet" "public" {
   count = length(data.aws_availability_zones.all.names)
@@ -59,15 +73,6 @@ resource "aws_subnet" "private" {
   ipv6_cidr_block                 = "${var.use_ipv6 == 0 ? "" : cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, var.vpc["newbits"], count.index + 100)}"
   assign_ipv6_address_on_creation = "${var.use_ipv6}"
 **/
-}
-
-# Internet Gateway
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.vpc.id
-
-  tags = {
-    Name = "Internet Gateway"
-  }
 }
 
 # NAT Gateways
