@@ -14,15 +14,10 @@ variable "region" {
   default = "ap-southeast-1"
 }
 
+//AWS VPC Configuration
 variable "env_name" {
   type        = string
   default     = "stg"
-}
-
-//AWS VPC Configuration
-variable "vpc_name" {
-  type        = string
-  default     = "vpc"
 }
 
 variable "enable_dns_hostnames" {
@@ -92,18 +87,12 @@ variable "default_tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)
   default     = {
-    env       : "Stage",
-    department: "DSS",
-    team      : "Digital Engagement"
+    Project   : "Project A",
+    Team      : "Team A"
   }
 }
 
 variable "vpc_tags" {
   type        = map(string)
   default     = {}
-}
-
-variable "igw_tag" {
-  type        = string
-  default     = "igw-stage"
 }

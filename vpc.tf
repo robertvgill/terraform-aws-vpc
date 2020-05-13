@@ -28,7 +28,7 @@ resource "aws_vpc" "vpc" {
 
   tags = merge(
     {
-      "name" = format("%s", var.vpc_name)
+      "Name" = format("%s", var.env_name)
     },
     var.default_tags
   )
@@ -40,7 +40,7 @@ resource "aws_internet_gateway" "igw" {
 
   tags = merge(
     {
-      "Name" = format("%s", var.igw_tag)
+      "Name" = "${var.env_name}-igw"
     },
     var.default_tags
   )
@@ -59,6 +59,13 @@ resource "aws_subnet" "public" {
   ipv6_cidr_block                 = "${var.use_ipv6 == 0 ? "" : cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, var.vpc["newbits"], count.index + 1)}"
   assign_ipv6_address_on_creation = "${var.use_ipv6}"
 **/
+
+  tags = merge(
+    {
+      "Name" = "${var.env_name}-public-subnet-az${count.index + 1}"
+    },
+    var.default_tags
+  )
 }
 
 resource "aws_subnet" "private" {
@@ -73,6 +80,13 @@ resource "aws_subnet" "private" {
   ipv6_cidr_block                 = "${var.use_ipv6 == 0 ? "" : cidrsubnet(aws_vpc.vpc.ipv6_cidr_block, var.vpc["newbits"], count.index + 100)}"
   assign_ipv6_address_on_creation = "${var.use_ipv6}"
 **/
+
+tags = merge(
+    {
+      "Name" = "${var.env_name}-private-subnet-az${count.index + 1}"
+    },
+    var.default_tags
+  )
 }
 
 # NAT Gateways
@@ -99,18 +113,24 @@ resource "aws_nat_gateway" "nat" {
     create_before_destroy = true
   }
 
-  tags = {
-    Name = "gw NAT"
-  }
+  tags = merge(
+      {
+        "Name" = "${var.env_name}-nat-az${count.index + 1}"
+      },
+      var.default_tags
+    )
 }
 
 # Route Tables
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.vpc.id
 
-  tags = {
-    Name = "Public Subnet Route Table"
-  }
+  tags = merge(
+      {
+        "Name" = "${var.env_name}-public-rtb"
+      },
+      var.default_tags
+    )
 }
 
 resource "aws_route" "public" {
@@ -125,9 +145,12 @@ resource "aws_route_table" "private" {
 
   vpc_id = aws_vpc.vpc.id
 
-  tags = {
-    Name = "Private Subnet Route Table"
-  }
+  tags = merge(
+      {
+        "Name" = "${var.env_name}-private-rtb-az${count.index + 1}"
+      },
+      var.default_tags
+    )
 }
 
 resource "aws_route" "private" {
