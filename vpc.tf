@@ -40,7 +40,7 @@ resource "aws_internet_gateway" "igw" {
 
   tags = merge(
     {
-      "Name" = "${var.env_name}-igw"
+      "Name" = "${var.env_name}-internet-gateway"
     },
     var.default_tags
   )
@@ -115,7 +115,7 @@ resource "aws_nat_gateway" "nat" {
 
   tags = merge(
       {
-        "Name" = "${var.env_name}-nat-az${count.index + 1}"
+        "Name" = format("%s-nat-gateway-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
@@ -127,7 +127,7 @@ resource "aws_route_table" "public" {
 
   tags = merge(
       {
-        "Name" = "${var.env_name}-public-rtb"
+        "Name" = "${var.env_name}-public-route"
       },
       var.default_tags
     )
@@ -147,7 +147,7 @@ resource "aws_route_table" "private" {
 
   tags = merge(
       {
-        "Name" = "${var.env_name}-private-rtb-az${count.index + 1}"
+        "Name" = format("%s-private-route-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
