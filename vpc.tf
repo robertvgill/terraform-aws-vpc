@@ -1,30 +1,20 @@
+# S3 remote state
 terraform {
-  backend "s3" {
-    bucket         = "robertgillsg-terraform-remote-state-storage-s3"
-    key            = "global/s3/terraform.tfstate"
-    region         = "ap-southeast-1"
-
-    dynamodb_table = "terraform-state-lock-dynamo"
-    encrypt        = true
-  }
+  backend "s3" {}
 }
 
-## AWS Availability Zones
+# AWS Availability Zones
 data "aws_availability_zones" "all" {
   state = "available"
 }
 
-## VPC
+# VPC
 resource "aws_vpc" "vpc" {
   cidr_block                       = var.vpc_cidr["cidr_block"]
   instance_tenancy                 = var.tenancy
   enable_dns_support               = var.enable_dns_support
   enable_dns_hostnames             = var.enable_dns_hostnames
   assign_generated_ipv6_cidr_block = var.enable_ipv6
-
-  lifecycle {
-    create_before_destroy = true
-  }
 
   tags = merge(
     {
@@ -34,7 +24,7 @@ resource "aws_vpc" "vpc" {
   )
 }
 
-## Internet Gateway
+# Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
 
@@ -95,9 +85,6 @@ resource "aws_eip" "nat_gw_eip" {
 
   vpc = true
 
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -108,10 +95,6 @@ resource "aws_nat_gateway" "nat" {
 //  private_ip    = lookup(var.nat_gateway_ips, count.index)
 
   depends_on    = [aws_internet_gateway.igw]
-
-  lifecycle {
-    create_before_destroy = true
-  }
 
   tags = merge(
       {
@@ -168,10 +151,6 @@ resource "aws_route_table_association" "public" {
 
   subnet_id      = element(aws_subnet.public.*.id, count.index)
   route_table_id = element(aws_route_table.public.*.id, count.index)
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_route_table_association" "private" {
@@ -179,8 +158,4 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = element(aws_subnet.private.*.id, count.index)
   route_table_id = element(aws_route_table.private.*.id, count.index)
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
