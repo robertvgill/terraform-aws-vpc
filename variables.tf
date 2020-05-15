@@ -49,18 +49,21 @@ variable "vpc_cidr" {
 }
 
 variable "subnet_cidrs_public" {
-  type = list(string)
-  default = []
+  description = ""
+  type        = list(string)
+  default     = []
 }
 
 variable "subnet_cidrs_private" {
-  type = list(string)
-  default = []
+  description = ""
+  type        = list(string)
+  default     = []
 }
 
 variable "subnet_cidrs_database" {
-  type = list(string)
-  default = []
+  description = ""
+  type        = list(string)
+  default     = []
 }
 
 variable "default_tags" {
