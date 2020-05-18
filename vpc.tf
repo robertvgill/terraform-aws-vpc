@@ -43,6 +43,13 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_egress_only_internet_gateway" "igw" {
 
   vpc_id = aws_vpc.vpc.id
+
+  tags = merge(
+    {
+      "Name" = "${var.env_name}-egress-internet-gateway"
+    },
+    var.default_tags
+  )
 }
 
 # Public Subnets
@@ -218,4 +225,11 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = element(aws_subnet.private.*.id, count.index)
   route_table_id = element(aws_route_table.private.*.id, count.index)
+}
+
+resource "aws_route_table_association" "database" {
+  count          = length(data.aws_availability_zones.all.names)
+
+  subnet_id      = element(aws_subnet.database.*.id, count.index)
+  route_table_id = element(aws_route_table.database.*.id, count.index)
 }
