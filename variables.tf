@@ -1,8 +1,6 @@
-# Configure the AWS Provider
-
-# AWS Region
-variable "region" {
-  description = "The name AWS region"
+# AWS credentials
+variable "profile" {
+  description = "The name of the AWS profile to use for the instance"
   type        = string
 }
 
@@ -11,15 +9,28 @@ variable "credentials" {
   type        = string
 }
 
-variable "profile" {
-  description = "The name of the AWS profile to use for the instance"
+# AWS Region
+variable "region" {
+  description = "The name AWS region"
+  type        = string
+}
+
+# Environment
+variable "env_name" {
+  description = ""
   type        = string
 }
 
 # AWS VPC Configuration
-variable "env_name" {
-  description = ""
-  type        = string
+variable "create_vpc" {
+  description = "If true, the vpc id used to launch subnets, security group and instance"
+  type        = bool
+}
+
+variable "vpc_cidr" {
+ description = ""
+ type        = map(string)
+ default     = {}
 }
 
 variable "tenancy" {
@@ -27,25 +38,20 @@ variable "tenancy" {
   type        = string
 }
 
-variable "enable_dns_hostnames" {
-  type        = bool
-  default     = false
-}
-
 variable "enable_dns_support" {
   type        = bool
   default     = true
 }
 
-variable "enable_ipv6" {
+variable "enable_dns_hostnames" {
   type        = bool
   default     = false
 }
 
-variable "vpc_cidr" {
- description = ""
- type        = map(string)
- default     = {}
+variable "use_ipv6" {
+  description = "If true, the specified subnet will have assigned IPv6 address block"
+  type        = bool
+  default     = false
 }
 
 variable "subnet_cidrs_public" {
