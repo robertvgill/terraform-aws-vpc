@@ -34,7 +34,7 @@ resource "aws_internet_gateway" "igw" {
 
   tags = merge(
     {
-      "Name" = "${var.env_name}-internet-gateway"
+      "Name" = "${var.env_name}-igw"
     },
     var.default_tags
   )
@@ -46,7 +46,7 @@ resource "aws_egress_only_internet_gateway" "igw" {
 
   tags = merge(
     {
-      "Name" = "${var.env_name}-egress-internet-gateway"
+      "Name" = "${var.env_name}-eigw"
     },
     var.default_tags
   )
@@ -68,7 +68,7 @@ resource "aws_subnet" "public" {
 **/
   tags = merge(
     {
-      "Name" = "${var.env_name}-public-subnet-az${count.index + 1}"
+      "Name" = "${var.env_name}-web-tier-az${count.index + 1}"
     },
     var.default_tags
   )
@@ -92,7 +92,7 @@ resource "aws_subnet" "private" {
 
 tags = merge(
     {
-      "Name" = "${var.env_name}-private-subnet-az${count.index + 1}"
+      "Name" = "${var.env_name}-app-tier-az${count.index + 1}"
     },
     var.default_tags
   )
@@ -116,7 +116,7 @@ resource "aws_subnet" "database" {
 
 tags = merge(
     {
-      "Name" = "${var.env_name}-database-subnet-az${count.index + 1}"
+      "Name" = "${var.env_name}-data-tier-az${count.index + 1}"
     },
     var.default_tags
   )
@@ -130,7 +130,7 @@ resource "aws_eip" "nat" {
 
   tags = merge(
       {
-        "Name" = format("%s-nat-gateway-az%d", var.env_name, count.index + 1)
+        "Name" = format("%s-nat-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
@@ -146,7 +146,7 @@ resource "aws_nat_gateway" "nat" {
 
   tags = merge(
       {
-        "Name" = format("%s-nat-gateway-az%d", var.env_name, count.index + 1)
+        "Name" = format("%s-nat-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
@@ -158,7 +158,7 @@ resource "aws_route_table" "public" {
 
   tags = merge(
       {
-        "Name" = "${var.env_name}-public-route"
+        "Name" = "${var.env_name}-web-rtb"
       },
       var.default_tags
     )
@@ -177,7 +177,7 @@ resource "aws_route_table" "private" {
 
   tags = merge(
       {
-        "Name" = format("%s-private-route-az%d", var.env_name, count.index + 1)
+        "Name" = format("%s-app-rtb-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
@@ -198,7 +198,7 @@ resource "aws_route_table" "database" {
 
   tags = merge(
       {
-        "Name" = format("%s-database-route-az%d", var.env_name, count.index + 1)
+        "Name" = format("%s-data-rtb-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
