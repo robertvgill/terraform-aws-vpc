@@ -10,8 +10,9 @@ data "aws_availability_zones" "all" {
 
 # VPC
 resource "aws_vpc" "vpc" {
+//  count = var.create_vpc ? 1 : 0
 
-  cidr_block                       = var.vpc_cidr["cidr_block"]
+  cidr_block                       = var.cidr_prefix
   instance_tenancy                 = var.tenancy
 
   enable_dns_support               = var.enable_dns_support
@@ -27,39 +28,42 @@ resource "aws_vpc" "vpc" {
   )
 }
 
-# Internet Gateway
-resource "aws_internet_gateway" "igw" {
+# DHCP Options Set
+resource "aws_vpc_dhcp_options" "vpc" {
+  count = var.enable_dhcp_options ? 1 : 0
 
-  vpc_id = aws_vpc.vpc.id
+  domain_name          = var.dhcp_options_domain_name
+  domain_name_servers  = var.dhcp_options_domain_name_servers
+  ntp_servers          = var.dhcp_options_ntp_servers
+  netbios_name_servers = var.dhcp_options_netbios_name_servers
+  netbios_node_type    = var.dhcp_options_netbios_node_type
 
   tags = merge(
     {
-      "Name" = "${var.env_name}-igw"
+      "Name" = "${var.env_name}-dhcp"
     },
     var.default_tags
   )
 }
 
-resource "aws_egress_only_internet_gateway" "igw" {
+# DHCP Options Set Association
+resource "aws_vpc_dhcp_options_association" "vpc" {
+  count = var.enable_dhcp_options ? 1 : 0
 
-  vpc_id = aws_vpc.vpc.id
-
-  tags = merge(
-    {
-      "Name" = "${var.env_name}-eigw"
-    },
-    var.default_tags
-  )
+  vpc_id          = aws_vpc.vpc.id
+  dhcp_options_id = aws_vpc_dhcp_options.vpc[0].id
 }
+
 
 # Public Subnets
 resource "aws_subnet" "public" {
   count             = length(data.aws_availability_zones.all.names)
+
   vpc_id            = aws_vpc.vpc.id
   availability_zone = element(data.aws_availability_zones.all.names, count.index)
 
 //  cidr_block        = element(var.subnet_cidrs_public, count.index)
-  cidr_block        = cidrsubnet(var.vpc_cidr["cidr_block"], var.vpc_cidr["newbits"], var.vpc_cidr["netnum"] * count.index + 0)
+  cidr_block        = cidrsubnet(var.cidr_prefix, var.cidr_newbits, 1 * count.index + 0)
 
   map_public_ip_on_launch = true
 /**
@@ -68,7 +72,7 @@ resource "aws_subnet" "public" {
 **/
   tags = merge(
     {
-      "Name" = "${var.env_name}-web-tier-az${count.index + 1}"
+      "Name" = "${var.env_name}-public-az${count.index + 1}"
     },
     var.default_tags
   )
@@ -82,7 +86,7 @@ resource "aws_subnet" "private" {
   availability_zone = element(data.aws_availability_zones.all.names, count.index)
 
 //  cidr_block        = element(var.subnet_cidrs_private, count.index)
-  cidr_block        = cidrsubnet(var.vpc_cidr["cidr_block"], var.vpc_cidr["newbits"], var.vpc_cidr["netnum"] * count.index + 3)
+  cidr_block        = cidrsubnet(var.cidr_prefix, var.cidr_newbits, 1 * count.index + 3)
 
   map_public_ip_on_launch = false
 /**
@@ -92,7 +96,7 @@ resource "aws_subnet" "private" {
 
 tags = merge(
     {
-      "Name" = "${var.env_name}-app-tier-az${count.index + 1}"
+      "Name" = "${var.env_name}-private-az${count.index + 1}"
     },
     var.default_tags
   )
@@ -106,7 +110,7 @@ resource "aws_subnet" "database" {
   availability_zone = element(data.aws_availability_zones.all.names, count.index)
 
 //  cidr_block        = element(var.subnet_cidrs_database, count.index)
-  cidr_block        = cidrsubnet(var.vpc_cidr["cidr_block"], var.vpc_cidr["newbits"], var.vpc_cidr["netnum"] * count.index + 6)
+  cidr_block        = cidrsubnet(var.cidr_prefix, var.cidr_newbits, 1 * count.index + 6)
 
   map_public_ip_on_launch = false
 /**
@@ -116,49 +120,81 @@ resource "aws_subnet" "database" {
 
 tags = merge(
     {
-      "Name" = "${var.env_name}-data-tier-az${count.index + 1}"
+      "Name" = "${var.env_name}-database-az${count.index + 1}"
     },
     var.default_tags
   )
 }
 
+
+# Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = merge(
+    {
+      "Name" = "${var.env_name}-igw"
+    },
+    var.default_tags
+  )
+}
+
+resource "aws_egress_only_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = merge(
+    {
+      "Name" = "${var.env_name}-eigw"
+    },
+    var.default_tags
+  )
+}
+
+
 # NAT Gateways
 resource "aws_eip" "nat" {
-  count      = length(data.aws_availability_zones.all.names)
+//  count      = length(data.aws_availability_zones.all.names)
 
   vpc        = true
 
   tags = merge(
       {
-        "Name" = format("%s-nat-az%d", var.env_name, count.index + 1)
+//        "Name" = format("%s-nat-az%d", var.env_name, count.index + 1)
+        "Name" = var.env_name
       },
       var.default_tags
     )
 }
 
 resource "aws_nat_gateway" "nat" {
-  count         = length(data.aws_availability_zones.all.names)
+//  count         = length(data.aws_availability_zones.all.names)
 
-  allocation_id = element(aws_eip.nat.*.id, count.index)
-  subnet_id     = element(aws_subnet.public.*.id, count.index)
+//  allocation_id = element(aws_eip.nat.*.id, count.index)
+//  subnet_id     = element(aws_subnet.public.*.id, count.index)
+
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
 
   depends_on    = [aws_internet_gateway.igw]
 
   tags = merge(
       {
-        "Name" = format("%s-nat-az%d", var.env_name, count.index + 1)
+//        "Name" = format("%s-nat-az%d", var.env_name, count.index + 1)
+        "Name" = var.env_name
       },
       var.default_tags
     )
 }
 
+
 # Route Tables
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.vpc.id
+  propagating_vgws = [aws_vpn_gateway.vpn_gateway.id]
 
   tags = merge(
       {
-        "Name" = "${var.env_name}-web-rtb"
+        "Name" = "${var.env_name}-public-rtb"
       },
       var.default_tags
     )
@@ -170,14 +206,16 @@ resource "aws_route" "public" {
   gateway_id             = aws_internet_gateway.igw.id
 }
 
+
 resource "aws_route_table" "private" {
   count  = length(data.aws_availability_zones.all.names)
 
   vpc_id = aws_vpc.vpc.id
+  propagating_vgws = [aws_vpn_gateway.vpn_gateway.id]
 
   tags = merge(
       {
-        "Name" = format("%s-app-rtb-az%d", var.env_name, count.index + 1)
+        "Name" = format("%s-private-rtb-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
@@ -191,14 +229,16 @@ resource "aws_route" "private" {
   nat_gateway_id         = element(aws_nat_gateway.nat.*.id, count.index)
 }
 
+
 resource "aws_route_table" "database" {
   count  = length(data.aws_availability_zones.all.names)
 
   vpc_id = aws_vpc.vpc.id
+  propagating_vgws = [aws_vpn_gateway.vpn_gateway.id]
 
   tags = merge(
       {
-        "Name" = format("%s-data-rtb-az%d", var.env_name, count.index + 1)
+        "Name" = format("%s-database-rtb-az%d", var.env_name, count.index + 1)
       },
       var.default_tags
     )
@@ -211,6 +251,7 @@ resource "aws_route" "database" {
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.nat.*.id, count.index)
 }
+
 
 # Route Table Association
 resource "aws_route_table_association" "public" {

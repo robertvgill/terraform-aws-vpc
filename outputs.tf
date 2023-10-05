@@ -18,6 +18,26 @@ output "vpc_cidr_block" {
   value       = concat(aws_vpc.vpc.*.cidr_block, [""])[0]
 }
 
+output "vpc_instance_tenancy" {
+  description = "Tenancy of instances within VPC"
+  value       = concat(aws_vpc.vpc.*.instance_tenancy, [""])[0]
+}
+
+output "vpc_enable_dns_support" {
+  description = "Whether or not the VPC has DNS support"
+  value       = concat(aws_vpc.vpc.*.enable_dns_support, [""])[0]
+}
+
+output "vpc_enable_dns_hostnames" {
+  description = "Whether or not the VPC has DNS hostname support"
+  value       = concat(aws_vpc.vpc.*.enable_dns_hostnames, [""])[0]
+}
+
+output "vpc_ipv6_association_id" {
+  description = "The association ID for the IPv6 CIDR block"
+  value       = concat(aws_vpc.vpc.*.ipv6_association_id, [""])[0]
+}
+
 output "private_subnets" {
   description = "List of IDs of private subnets"
   value       = aws_subnet.private.*.id
